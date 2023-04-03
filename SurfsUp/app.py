@@ -1,6 +1,7 @@
 # Import the dependencies.
 
 import numpy as np
+import datetime as dt
 import sqlalchemy
 from sqlalchemy.ext.automap import automap_base
 from sqlalchemy.orm import Session
@@ -45,7 +46,7 @@ def home():
         f"/api/v1.0/precipitation<br/>"
         f"/api/v1.0/stations<br/>"
         f"/api/v1.0/tobs<br/>"
-        f"/api/v1.0[start_date format:yyyy-mm-dd]<br/>"
+        f"/api/v1.0/[start_date format:yyyy-mm-dd]<br/>"
         f"/api/v1.0/[start_date format:yyyy-mm-dd]/[end_date format:yyyy-mm-dd]<br/>"
     )
 
@@ -76,7 +77,7 @@ def stations():
     group_by(measurement.station).order_by(func.count(measurement.station).desc()).all()
     
     session.close()
-    
+    # Use np.ravel() to turn the tuple into a normal list.
     stations_list = list(np.ravel(mostActive_stations))
     return jsonify(stations_list)
 
@@ -104,7 +105,48 @@ def temperatures():
 
     return jsonify(tobs_data)
 
+@app.route("/api/v1.0/<start_date>")
+def plan1(start_date):
+    session = Session(engine)
     
+    discovery = session.query(func.min(measurement.tobs),func.avg(measurement.tobs),func.max(measurement.tobs)).\
+              filter(measurement.date >= start_date).all()
+    session.close()
+
+    plan1_info = []
+    for min,avg,max in discovery:
+        plan1_dict = {}
+        plan1_dict["TMIN"] = min
+        plan1_dict["TAVG"] = avg
+        plan1_dict["TMAX"] = max
+
+        plan1_info.append(plan1_dict)
+    
+    if plan1_dict["TMIN"]:
+        return jsonify(plan1_info)
+    else:
+        return jsonify({"error": f"Date {start_date} not discovered or not formatted as: YYYY-MM-DD"}), 404
+
+@app.route("/api/v1.0/<start_date>/<end_date>")
+def plan2(start_date,end_date = "2017-08-23"):
+    session = Session(engine)
+    
+    discovery2 = session.query(func.min(measurement.tobs),func.avg(measurement.tobs),func.max(measurement.tobs)).\
+              filter(measurement.date >= start_date).filter(measurement.date <= end_date).all()
+    session.close()
+
+    plan2_info = []
+    for min,avg,max in discovery2:
+        plan2_dict = {}
+        plan2_dict["TMIN"] = min
+        plan2_dict["TAVG"] = avg
+        plan2_dict["TMAX"] = max
+
+        plan2_info.append(plan2_dict)
+    
+        return jsonify(plan2_info)
+
+
 
 if __name__ == "__main__":
     app.run(debug=True)
