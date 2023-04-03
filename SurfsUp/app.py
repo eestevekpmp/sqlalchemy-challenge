@@ -54,7 +54,7 @@ def precipitation():
     session = Session(engine)
 
     prcp_scores = session.query(measurement.date, measurement.prcp).\
-        filter(measurement.date >= "2016-08-24").all()
+        filter(measurement.date >= "2016-08-23").all()
     session.close()
 # Convert prcp_scores query results to a dictionary.
     prcp_data = []
@@ -70,17 +70,41 @@ def precipitation():
 # Return a JSON list of stations from the dataset.
 @app.route("/api/v1.0/stations")
 def stations():
+    session = Session(engine)
 
     mostActive_stations = session.query(measurement.station, func.count(measurement.station)).\
     group_by(measurement.station).order_by(func.count(measurement.station).desc()).all()
-    mostActive_stations
+    
     session.close()
+    
     stations_list = list(np.ravel(mostActive_stations))
     return jsonify(stations_list)
 
 
 # Return a JSON list of tobs for the previous year.
+@app.route("/api/v1.0/tobs")
+def temperatures():
+    session = Session(engine)
 
+    mostActive_station_id = "USC00519281"
+    start_date = "2016-08-23"
+    mostActive_station = session.query(measurement.station, measurement.date, measurement.tobs).\
+    filter(measurement.date >= start_date).\
+    filter(measurement.station == mostActive_station_id).all()
+    session.close()
+
+    tobs_data = []
+    for station,date,tobs in mostActive_station:
+        tobs_dict = {}
+        tobs_dict["station"] = station
+        tobs_dict["date"] = date
+        tobs_dict["tobs"] = tobs
+
+        tobs_data.append(tobs_dict)
+
+    return jsonify(tobs_data)
+
+    
 
 if __name__ == "__main__":
     app.run(debug=True)
