@@ -57,17 +57,29 @@ def precipitation():
         filter(measurement.date >= "2016-08-24").all()
     session.close()
 # Convert prcp_scores query results to a dictionary.
-prcp_data = []
-for date,prcp in prcp_scores:
-    prcp_dict = {}
-    prcp_dict["date"] = date
-    prcp_dict["prcp"] = prcp
+    prcp_data = []
+    for date,prcp in prcp_scores:
+        prcp_dict = {}
+        prcp_dict["date"] = date
+        prcp_dict["prcp"] = prcp
 
-    prcp_data.append(prcp_dict)
+        prcp_data.append(prcp_dict)
 
-return jsonify(prcp_data)
+    return jsonify(prcp_data)
+
+# Return a JSON list of stations from the dataset.
+@app.route("/api/v1.0/stations")
+def stations():
+
+    mostActive_stations = session.query(measurement.station, func.count(measurement.station)).\
+    group_by(measurement.station).order_by(func.count(measurement.station).desc()).all()
+    mostActive_stations
+    session.close()
+    stations_list = list(np.ravel(mostActive_stations))
+    return jsonify(stations_list)
 
 
+# Return a JSON list of tobs for the previous year.
 
 
 if __name__ == "__main__":
