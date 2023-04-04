@@ -104,7 +104,7 @@ def temperatures():
         tobs_data.append(tobs_dict)
 
     return jsonify(tobs_data)
-
+# Create a dictionary for trip plan based on start date of the trip and convert to json list of min, avg, and max tobs.
 @app.route("/api/v1.0/<start_date>")
 def plan1(start_date):
     session = Session(engine)
@@ -126,7 +126,8 @@ def plan1(start_date):
         return jsonify(plan1_info)
     else:
         return jsonify({"error": f"Date {start_date} not discovered or not formatted as: YYYY-MM-DD"}), 404
-
+# Create a dictionary for trip plan based on start and end date of the trip and convert to json
+# list of min, avg, and max tobs.
 @app.route("/api/v1.0/<start_date>/<end_date>")
 def plan2(start_date,end_date = "2017-08-23"):
     session = Session(engine)
